@@ -27,7 +27,7 @@ const ingestFileController = (argv) => {
   } catch (error) {
   	const isFileAlreadyExist = isFileExist(argv.fileName);
     if (isFileAlreadyExist && error.code !== 'ENOENT') {
-      deleteFile(INGESTED_FILES_LOCATION, argv.fileName, error);
+      deleteFile(argv.fileName, error);
     }
 
     errorLogger({message: error});

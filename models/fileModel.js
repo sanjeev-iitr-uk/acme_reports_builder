@@ -32,7 +32,7 @@ class FileModel {
     validateFileValues(this.fileData);
 
     if (isFileAlreadyExist) {
-      deleteFile(this.filesLocation, this.fileName);
+      deleteFile(this.fileName);
     }
 
     try {

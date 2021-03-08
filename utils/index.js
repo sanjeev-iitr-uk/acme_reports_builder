@@ -27,13 +27,13 @@ const validateFileValues = fileData => {
 
 
 // rollback and update file
-const deleteFile = (filesLocation, fileName, error) => {
+const deleteFile = (fileName, error) => {
   if (error) {
     console.log(chalk.yellow('Rolling-back any changes...'));
   } else {
     console.lolog(chalk.yellow('Removing duplicate files...'));
   }
-
+  const filesLocation =  path.join(__dirname, INGESTED_FILES_LOCATION);
   fs.readdirSync(filesLocation).forEach(file => {
     if (file === `${fileName}.json`) {
       fs.unlinkSync(path.join(filesLocation, file));
@@ -45,7 +45,7 @@ const deleteFile = (filesLocation, fileName, error) => {
 
 const errorLogger = error => {
   console.log(chalk.red(error.message));
-  process.exit();
+  process.exit(0);
 };
 
 const isFileExist = (fileName) => {
