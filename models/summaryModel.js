@@ -1,8 +1,8 @@
 'use strict';
 
-const {forIn, isArray} = require('lodash');
+const { forIn } = require('lodash');
 const { getIngestedFiles, errorLogger, mergeSKUs } = require('../utils');
-
+const { getObject } = require('../db');
 const chalk = require('chalk');
 
 
@@ -12,21 +12,24 @@ class SummaryModel {
     this.args = args;
   }
 
-  // _errorIfEmpty(value) {
-  //   value = isArray(value) ? value[0] : value;
-
-  //   if (!value) {
-  //     throwError({message: 'Data not available'});
-  //   }
-  // }
-
   generateSummary() {
     const data = getIngestedFiles();
     if (!data.length) {
       errorLogger({message: 'Data not available'});
     }
-    const SKUs = mergeSKUs(data);
-    return this.filterByCategory(SKUs, this.args.category);
+    // const SKUs = mergeSKUs(data);
+    const summary = data.map(item=> {
+      const categoryData = this.filterByCategory(item.data, this.args.category);
+      const fileData = getObject(item.fileName.split('.')[0]);
+      return {fileName: item.fileName, uploadOrder: fileData.uploadOrder, ...categoryData}
+    });
+    console.log(summary);
+    summary.sort((a, b) => b.uploadOrder - a.uploadOrder);
+    const result = summary.find((item) => item.units && item.sales)
+    const output = `${this.args.category} - Total Units: ${result.units}, Total Gross Sales: ${parseInt(result.sales).toFixed(
+      2
+    )}`;
+    console.log(chalk.blueBright(output));
   }
   filterByCategory(SKUs, category) {
     const filteredSKUs = SKUs.filter(sku => sku['Section'] === category);
@@ -49,11 +52,7 @@ class SummaryModel {
     if (!totalUnits || !totalGrossSales) {
       errorLogger({message: 'No Skus in this category !'});
     }
-    const output = `${this.args.category} - Total Units: ${totalUnits}, Total Gross Sales: ${totalGrossSales.toFixed(
-      2
-    )}`;
-    console.log(chalk.blueBright(output));
-    return output;
+    return {units: totalUnits, sales: totalGrossSales};    
   }
 }
 

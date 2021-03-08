@@ -4,8 +4,8 @@
   "description": "This tool accepts xlsx and txt data files in a predefined format and generate insights in a csv file",
   "main": "index.js",
   "scripts": {
-    "ingest": "node app.js ingest --filename=two.xlsx",
-    "summary": "node app.js summary --category=A --year=2018 --month=12",
+    "ingest": "node app.js ingest --filename=one.xlsx",
+    "summary": "node app.js summary --category=Produce --year=2019 --month=4",
     "generate_report": "node app.js generate_report --filename=three.txt",
     "exit": "node app.js exit",
     "test": "jest --runInBand"
@@ -27,6 +27,7 @@
     "jest-html-reporter": "^2.8.0",
     "lodash": "^4.17.15",
     "mime-types": "^2.1.26",
+    "notarealdb": "^0.2.2",
     "xlsx": "^0.15.5",
     "yargs": "^12.0.2"
   }

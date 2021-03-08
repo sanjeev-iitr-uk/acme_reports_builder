@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 
 
+
 const INGESTED_FILES_LOCATION = '../files/ingestedFiles';
 
 const validateFileValues = fileData => {
@@ -31,7 +32,7 @@ const deleteFile = (fileName, error) => {
   if (error) {
     console.log(chalk.yellow('Rolling-back any changes...'));
   } else {
-    console.lolog(chalk.yellow('Removing duplicate files...'));
+    console.log(chalk.yellow('Removing duplicate files...'));
   }
   const filesLocation =  path.join(__dirname, INGESTED_FILES_LOCATION);
   fs.readdirSync(filesLocation).forEach(file => {
@@ -61,15 +62,40 @@ const checkFilesExist = () => {
 const getIngestedFiles = () => {
   const filesLocation = path.join(__dirname, INGESTED_FILES_LOCATION);
   const items = fs.readdirSync(filesLocation);
-  let output = [];
-  items.forEach(file => {
-  	const items = JSON.parse(fs.readFileSync(`${filesLocation}/${file}`, 'utf8'));
-    output = [...output, ...items];
+  const output = items.map(file => {
+  	return {fileName: file, data: JSON.parse(fs.readFileSync(`${filesLocation}/${file}`, 'utf8'))};
   });
   const data = output.filter((item) => item);
   return data;
 };
+const getCategoryHighestSales = (data) => {
+  if (!data.length) {return ''}
+  const item = data[0];
+  let maxDate = new Date(1800, 1, 0);
+  let maxKey = '';
+  let category = '';
+  let grossSale = 0;
+  Object.keys(item).forEach(key => {
+    if (key !== 'SKU' && key !== 'Section') {
+      const [year, restKeyValue] = key.split('-');
+      const [month] = restKeyValue.split(' ');
+      const thisDate = new Date(year, month, 0);
+      if (thisDate > maxDate) {
+        maxDate = thisDate
+        maxKey = `${year}-${month} Gross Sales`;
+      }
+    }
+  })
+  data.forEach(item => {
+    if (item[maxKey] > grossSale){
+      grossSale = item[maxKey]
+      category = item.Section
+    }
+  })
+  return category;
+}
 const mergeSKUs = (data) => {
+  const maxSalesCategory = getCategoryHighestSales(data);
   const skuMap = {}
   data.forEach((item) => {
       if(skuMap[item.SKU]){
@@ -79,6 +105,10 @@ const mergeSKUs = (data) => {
                   oldObject[key] += item[key]
               }
           })
+          if(oldObject.Section !== item.Section){
+            oldObject.Section = maxSalesCategory;
+            oldObject.hasCategoryChanged = true;
+          }
           skuMap[item.SKU] = oldObject
       } else {
           skuMap[item.SKU] = item

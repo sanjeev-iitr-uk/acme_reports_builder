@@ -9,7 +9,7 @@ const chalk = require('chalk');
 const mime = require('mime-types');
 const stringify = require('csv-stringify');
 const { validateFileValues, deleteFile, errorLogger, mergeSKUs, sortData } = require('../utils');
-
+const { createObject, deleteObject } = require('../db');
 
 const OUPUT_FILES_LOCATION = '../output';
 
@@ -33,10 +33,13 @@ class FileModel {
 
     if (isFileAlreadyExist) {
       deleteFile(this.fileName);
+      deleteObject(this.fileName);
     }
 
     try {
+      this.fileData = mergeSKUs(this.fileData);
       const fileLocation = path.join(__dirname, this.filesLocation);
+      createObject({id: this.fileName, uploadOrder: Date.now()});
       fs.writeFileSync(`${fileLocation}/${this.fileName}.json`, JSON.stringify(this.fileData), 'utf-8');
     } catch (error) {
       errorLogger({message: error});
