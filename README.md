@@ -35,9 +35,9 @@ Dillinger uses a number of open source projects to work properly:
 
 ## Installation
 
-I build this app on node 8.17.0. and working fine this version
+I build this app on node 8.17.0. and it is working fine on this version
 
-Install the dependencies and devDependencies and start the server.
+Install the dependencies and devDependencies and start the server. Please use branch - "main".
 
 ```sh
 cd acme_reports_builder
