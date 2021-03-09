@@ -1,5 +1,4 @@
 const path = require('path');
-const fs = require('fs');
 const {FileModel} = require('../models');
 const { deleteFile, errorLogger, isFileExist } = require('../utils');
 

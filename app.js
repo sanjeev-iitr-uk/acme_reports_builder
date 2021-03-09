@@ -3,7 +3,7 @@ const yargs = require('yargs');
 const {ingestFileController, summaryController, reportController} = require('./controllers');
 
 
-// ingest command
+// ingest command handler
 yargs.command({
     command: 'ingest',
     describe: 'ingest data files into system',
@@ -19,7 +19,7 @@ yargs.command({
     }
 })
 
-// summary command
+// summary command handler
 yargs.command({
     command: 'summary',
     describe: 'Get summary of a category for a particular year and month',
@@ -44,7 +44,7 @@ yargs.command({
         summaryController(argv);
     }
 })
-// generate_report command
+// generate_report command handler
 yargs.command({
     command: 'generate_report',
     describe: 'Get a detailed report for a file',
@@ -59,6 +59,7 @@ yargs.command({
         reportController(argv);
     }
 })
+// exit command handler
 yargs.command({
     command: 'exit',
     describe: 'Exit the program',

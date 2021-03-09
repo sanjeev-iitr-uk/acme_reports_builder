@@ -1,24 +1,49 @@
 const path = require('path');
-const {FileModel} = require('../models');
-const { errorLogger, checkFilesExist } = require('../utils');
-
-const INPUT_FILES_LOCATION = '../files/ingestedFiles';
-const INGESTED_FILES_LOCATION = '../input';
-
-const ALLOWED_FILES_TYPES = [
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'text/plain; charset=utf-8',
-  ];
+const { errorLogger, checkFilesExist, getIngestedFiles, generateCSV } = require('../utils');
+const { getObject } = require('../db');
 
 const reportController = (args) => {
     const filesInSystem = checkFilesExist();
-    const filePath = path.join(__dirname, INGESTED_FILES_LOCATION, args.filename);
-    const fileInstance = new FileModel(filePath, INGESTED_FILES_LOCATION)
-    fileInstance.getJSONData();
-    if (!ALLOWED_FILES_TYPES.includes(fileInstance.fileType)) {
-       errorLogger({message: 'Error: Only .xlsx & .txt files accepted !'});
+    if(filesInSystem) {
+      const data = getIngestedFiles();
+      const mergedData = [];
+      data.forEach(item => {
+        const fileData = getObject(item.fileName.split('.')[0]);
+        item.data.forEach(i => {
+          const baseKey = `${i.SKU}-${i.Section}`;
+          const keysData = {};
+          Object.keys(i).forEach(key => {
+            if(key !== 'SKU' && key !== 'Section') {
+              const [year, restKeyValue] = key.split('-');
+              const [month] = restKeyValue.split(' ');
+              const tempKey = `${year}-${month}`;
+              keysData[tempKey] = true
+            }
+          })
+          Object.keys(keysData).forEach((k) => {
+            const fullKey = `${baseKey}-${k}`;
+            const year = k.split('-')[0];
+            const month = k.split('-')[1];
+            const masterObject = {};
+            masterObject.id = fullKey;
+            masterObject.uploadOrder = fileData.uploadOrder;
+            const unitKey = `${k} Units`;
+            const salesKey = `${k} Gross Sales`;
+            masterObject.sales = i[salesKey];
+            masterObject.units = i[unitKey];
+            masterObject.sku = i['SKU'];
+            masterObject.section = i['Section'];
+            masterObject.year = parseInt(year);
+            masterObject.month = parseInt(month);
+            mergedData.push(masterObject);
+          })
+        })
+
+      })
+      generateCSV(mergedData, args.filename);
+    }else {
+      errorLogger({message: 'Error: No Files In System !'});
     }
-    fileInstance.generateCSVFile();
 }
 module.exports = {
 	reportController
