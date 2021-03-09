@@ -1,4 +1,3 @@
-const path = require('path');
 const {SummaryModel} = require('../models');
 const { errorLogger, checkFilesExist } = require('../utils');
 

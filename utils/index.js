@@ -3,9 +3,10 @@ const chalk = require('chalk');
 const {forIn} = require('lodash');
 const fs = require('fs');
 const path = require('path');
+const stringify = require('csv-stringify');
 
 
-
+const OUPUT_FILES_LOCATION = '../output';
 const INGESTED_FILES_LOCATION = '../files/ingestedFiles';
 
 const validateFileValues = fileData => {
@@ -43,22 +44,26 @@ const deleteFile = (fileName, error) => {
 };
 
 
-
+// common error logger
 const errorLogger = error => {
   console.log(chalk.red(error.message));
   process.exit(0);
 };
 
+// check if a file exist in system
 const isFileExist = (fileName) => {
   const location = path.join(__dirname, INGESTED_FILES_LOCATION, `${fileName}.json`);
 	return fs.existsSync(location);
 }
 
+// check if files exist in system
 const checkFilesExist = () => {
     const location = path.join(__dirname, INGESTED_FILES_LOCATION);
     const files = fs.readdirSync(location);
     return files.length;
 }
+
+// collect all ingested files
 const getIngestedFiles = () => {
   const filesLocation = path.join(__dirname, INGESTED_FILES_LOCATION);
   const items = fs.readdirSync(filesLocation);
@@ -68,6 +73,8 @@ const getIngestedFiles = () => {
   const data = output.filter((item) => item);
   return data;
 };
+
+// highest sales category in a file
 const getCategoryHighestSales = (data) => {
   if (!data.length) {return ''}
   const item = data[0];
@@ -94,6 +101,8 @@ const getCategoryHighestSales = (data) => {
   })
   return category;
 }
+
+// merge duplicate skus and category
 const mergeSKUs = (data) => {
   const maxSalesCategory = getCategoryHighestSales(data);
   const skuMap = {}
@@ -118,6 +127,58 @@ const mergeSKUs = (data) => {
   Object.keys(skuMap).forEach(key => mergedSKUs.push(skuMap[key]))
   return mergedSKUs;
 }
+// generate csv file
+const generateCSV = (data, filename) => {
+  const skuDict = {}
+  data.forEach(item => {
+      if(skuDict[item.id]){
+          const oldObject = skuDict[item.id]
+          if(oldObject.uploadOrder <  item.uploadOrder) {
+            skuMap[item.id] = item
+          }
+      } else {
+          skuDict[item.id] = item
+      }
+  });
+  const mergedEntries = [];
+  Object.keys(skuDict).forEach(key => mergedEntries.push(skuDict[key]))
+  const sortedData = sortData(mergedEntries, 'section');
+  const input = [];
+  sortedData.forEach(item => {
+    input.push([
+      item['year'],
+      item['month'],
+      item['sku'],
+      item['section'],
+      item['units'],
+      item['sales'],
+    ]);
+  });
+  outputCSV(input, filename);
+}
+// output csv  file
+const outputCSV = (input, fileName) => {
+  stringify(
+    input,
+    {
+      header: true,
+      columns: {year: 'Year', month: 'Month', sku: 'SKU', category: 'Category', units: 'Units', sales: 'Gross Sales'},
+    },
+    (error, output) => {
+      if (error) {
+        errorLogger({message: error});
+      }
+
+      try {
+        const outputFileLocation =  path.join(__dirname, OUPUT_FILES_LOCATION, `${fileName}.csv`);
+        fs.writeFileSync(outputFileLocation, output);
+        console.log(chalk.blueBright('file generated successfully !, please check output folder !'));
+      } catch (error) {
+        errorLogger({message: error});
+      }
+    }
+  );
+}
 const sortData = (data, key) => {
   return data.sort((a, b) => (a[key] > b[key] ? 1 : b[key] > a[key] ? -1 : 0));
 };
@@ -130,5 +191,6 @@ module.exports = {
   checkFilesExist: checkFilesExist,
   getIngestedFiles: getIngestedFiles,
   mergeSKUs: mergeSKUs,
-  sortData: sortData
+  sortData: sortData,
+  generateCSV: generateCSV
 };

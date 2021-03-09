@@ -17,13 +17,11 @@ class SummaryModel {
     if (!data.length) {
       errorLogger({message: 'Data not available'});
     }
-    // const SKUs = mergeSKUs(data);
     const summary = data.map(item=> {
       const categoryData = this.filterByCategory(item.data, this.args.category);
       const fileData = getObject(item.fileName.split('.')[0]);
       return {fileName: item.fileName, uploadOrder: fileData.uploadOrder, ...categoryData}
     });
-    console.log(summary);
     summary.sort((a, b) => b.uploadOrder - a.uploadOrder);
     const result = summary.find((item) => item.units && item.sales)
     const output = `${this.args.category} - Total Units: ${result.units}, Total Gross Sales: ${parseInt(result.sales).toFixed(

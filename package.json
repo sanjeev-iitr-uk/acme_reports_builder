@@ -6,7 +6,7 @@
   "scripts": {
     "ingest": "node app.js ingest --filename=one.xlsx",
     "summary": "node app.js summary --category=Produce --year=2019 --month=4",
-    "generate_report": "node app.js generate_report --filename=three.txt",
+    "generate_report": "node app.js generate_report --filename=output",
     "exit": "node app.js exit",
     "test": "jest --runInBand"
   },
